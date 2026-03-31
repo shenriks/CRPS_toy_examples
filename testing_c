@@ -1,0 +1,36 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+int main(void) {
+    const int Ndist = 20;
+    const int Nsamples = 100;
+    const double p_heads = 0.51;
+
+    /* fixed seed for reproducibility; change to time(NULL) if you want variability */
+    srand(12345);
+
+    double brier_sum = 0.0;                    /* CRPS for binary = Brier */
+    int total_flips = Ndist * Nsamples;
+
+    for (int d = 0; d < Ndist; ++d) {
+        int heads = 0;
+        for (int i = 0; i < Nsamples; ++i) {
+            /* draw Bernoulli(p_heads) */
+            double u = (double)rand() / (double)RAND_MAX;
+            int y = (u < p_heads) ? 1 : 0;
+            heads += y;
+
+            /* Brier score for this trial with forecast p_heads and outcome y */
+            double diff = p_heads - (double)y;
+            brier_sum += diff * diff;
+        }
+        double frac_heads = (double)heads / (double)Nsamples;
+        printf("Distribution %2d: fraction_heads = %.4f\n", d + 1, frac_heads);
+    }
+
+    double crps = brier_sum / (double)total_flips;
+    printf("\nCRPS (mean Brier over all %d flips) = %.6f\n", total_flips, crps);
+
+    return 0;
+}
